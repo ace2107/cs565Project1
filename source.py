@@ -16,7 +16,6 @@ def preprocessing_churn_data(data):
     #print(data.info())
     #print(data.head())
     dataframe_churn = pd.DataFrame(data)
-    #print(dataframe_churn.isna().sum())
     """Pre processing data
     dataframe_churn = pd.DataFrame(data=dataframe_churn, \
         columns=['customerID', 'gender', 'SeniorCitizen', 'Partner', 'Dependents', \
@@ -29,9 +28,8 @@ def preprocessing_churn_data(data):
         dataframe_churn[num] = preprocessing.LabelEncoder().fit_transform(dataframe_churn[num])
         #dataframe_churn[num] = dataframe_churn[num].astype('category')
         #dataframe_churn[num] = dataframe_churn[num].cat.codes
-    dataframe_churn[19] = dataframe_churn[19].convert_objects(convert_numeric=True)
-    print(dataframe_churn.info())
-    print(dataframe_churn.head())
+    dataframe_churn[19] = pd.to_numeric(dataframe_churn[19], errors="coerce")
+    dataframe_churn.dropna(how='any', inplace=True)
     return dataframe_churn
 
 def normalize_data(data):
@@ -81,7 +79,6 @@ def k_means(data, k, init="random"):
     normalized_df = normalize_data(data)
     x = normalized_df.values
     X = np.array(list(zip(x)))
-    print(X)
     clusters = np.zeros(len(X))
     #Initial cluster centers
     if init == "random":
@@ -138,7 +135,8 @@ def optimal_k(data):
     plt.xlabel('No of Clusters')
     plt.ylabel('Silhouette_avg')
     plt.title('Silhoutte Score for different clusters')
-    retun k_scores
+
+    return k_scores
 
 def main():
     """main function"""
@@ -150,8 +148,9 @@ def main():
         print("Expected 3 inputs : filepath , number of clusters and type of kmeans. \
             \nProgram exiting....")
         sys.exit(1)
+
     #K - means clustering
-    if len(data.columns)>=15:
+    if len(data.columns) >= 15:
         #cluster.csv dataset
         procesed_churn_data = preprocessing_churn_data(data)
         procesed_churn_data_df = pd.DataFrame(procesed_churn_data)
@@ -166,7 +165,7 @@ def main():
     #pca_analysis(data)
     """
     output = pd.DataFrame(clusters)
-    output.to_csv('output.csv', sep=',', index = False, header = None)
+    output.to_csv('output.csv', sep=',', index=False, header=None)
 
 if __name__ == '__main__':
     main()
