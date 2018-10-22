@@ -26,8 +26,9 @@ def preprocessing_churn_data(data):
     dataframe_churn.drop(dataframe_churn.columns[[0]], axis=1, inplace=True)
     categorical_cols = {1,3,4,6,7,8,9,10,11,12,13,14,15,16,17}
     for num in categorical_cols:
-        dataframe_churn[num] = dataframe_churn[num].astype('category')
-        dataframe_churn[num] = dataframe_churn[num].cat.codes
+        dataframe_churn[num] = preprocessing.LabelEncoder().fit_transform(dataframe_churn[num])
+        #dataframe_churn[num] = dataframe_churn[num].astype('category')
+        #dataframe_churn[num] = dataframe_churn[num].cat.codes
     dataframe_churn[19] = dataframe_churn[19].convert_objects(convert_numeric=True)
     print(dataframe_churn.info())
     print(dataframe_churn.head())
@@ -80,6 +81,7 @@ def k_means(data, k, init="random"):
     normalized_df = normalize_data(data)
     x = normalized_df.values
     X = np.array(list(zip(x)))
+    print(X)
     clusters = np.zeros(len(X))
     #Initial cluster centers
     if init == "random":
@@ -119,6 +121,25 @@ def pca_analysis(data):
     #k_means(principalDF,2)
     #k_means(principalDF,2,"kpp")
 
+def optimal_k(data):
+    """Find optimal number of k clusters using Silhoutte score analysis"""
+    normalized_df = normalize_data(data)
+    matrix = normalized_df.as_matrix()
+    k_scores = []
+    for n_clusters in range(2, 30):
+        clusters = k_means(data, n_clusters, type_kmeans)
+        silhouette_avg = silhouette_score(matrix, clusters)
+        y.append(silhouette_avg)
+        print("For n_clusters =", n_clusters, "The average silhouette_score is :", silhouette_avg)
+
+    #Plot the average Silhoutte score for each num
+    plt.figure(figsize=(12, 8))
+    plt.plot(range(2, 30), k_scores)
+    plt.xlabel('No of Clusters')
+    plt.ylabel('Silhouette_avg')
+    plt.title('Silhoutte Score for different clusters')
+    retun k_scores
+
 def main():
     """main function"""
     try:
@@ -134,31 +155,12 @@ def main():
         #cluster.csv dataset
         procesed_churn_data = preprocessing_churn_data(data)
         procesed_churn_data_df = pd.DataFrame(procesed_churn_data)
-        clusters = k_means(procesed_churn_data_df, 2)
+        clusters = k_means(procesed_churn_data_df, 2, type_kmeans)
     else:
         #wine.csv dataset
         clusters = k_means(data, k, type_kmeans)
-    
-    """
-    #Find optimal number of clusters by varying number of clusters from 2 to 30
 
-    normalized_df = normalize_data(data)
-    matrix = normalized_df.as_matrix()
-    y = []
-    for n_clusters in range(2, 30):
-        clusters = k_means(data, n_clusters, type_kmeans)
-        silhouette_avg = silhouette_score(matrix, clusters)
-        y.append(silhouette_avg)
-        print("For n_clusters =", n_clusters, "The average silhouette_score is :", silhouette_avg)
-
-    #Plot the average Silhoutte score for each num
-    plt.figure(figsize=(12, 8))
-    plt.plot(range(2, 30), y)
-    plt.xlabel('No of Clusters')
-    plt.ylabel('Silhouette_avg')
-    plt.title('Silhoutte Score for different clusters')
-    """
-
+    #k_scores = optimal_k(data)
     """
     #Perform PCA
     #pca_analysis(data)
