@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
-from sklearn.metrics import silhouette_samples, silhouette_score
+from sklearn.metrics import silhouette_score
 #import matplotlib.pyplot as plt
 
 def preprocessing_churn_data(data):
@@ -23,7 +23,7 @@ def preprocessing_churn_data(data):
         'OnlineBackup', 'DeviceProtection', 'TechSupport', 'StreamingTV', 'StreamingMovies', \
         'PaperlessBilling', 'PaymentMethod', 'MonthlyCharges', 'TotalCharges'])"""
     dataframe_churn.drop(dataframe_churn.columns[[0]], axis=1, inplace=True)
-    categorical_cols = {1,3,4,6,7,8,9,10,11,12,13,14,15,16,17}
+    categorical_cols = {1, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17}
     for num in categorical_cols:
         dataframe_churn[num] = preprocessing.LabelEncoder().fit_transform(dataframe_churn[num])
         #dataframe_churn[num] = dataframe_churn[num].astype('category')
@@ -38,9 +38,9 @@ def normalize_data(data):
     normalized_df = pd.DataFrame(minmax_processed)
     return normalized_df
 
-def euclidian_dist(a, b, axis=1):
+def euclidian_dist(point1, point2, axis=1):
     """Euclidian distance between 2 points in Euclidian space"""
-    return np.linalg.norm(a - b, axis=axis)
+    return np.linalg.norm(point1 - point2, axis=axis)
 
 def initial_centroids(data, k):
     """Random initial centroids for k means"""
@@ -86,7 +86,7 @@ def k_means(data, k, init="random"):
     else:
         centroids = kpp_centers(X, k)
     #k Means algorithm. Iterate until convergence
-    max_iterations = 100
+    max_iterations = 500
     while max_iterations >= 0:
         for i in range(len(X)):
             distances = [euclidian_dist(X[i], center) for center in centroids]
@@ -115,10 +115,10 @@ def pca_analysis(data):
         columns=['Principal Component 1', 'Principal Component 2'])
     #plt.figure(figsize=(10, 8))
     #plt.scatter(principalDF[:, 0], principalDF[:, 1], c=y)
-    #k_means(principalDF,2)
-    #k_means(principalDF,2,"kpp")
+    pca_kmeans = k_means(principalDF, 2)
+    pca_kpp = k_means(principalDF, 2, "kpp")
 
-def optimal_k(data):
+def optimal_k(data, n_clusters, type_kmeans):
     """Find optimal number of k clusters using Silhoutte score analysis"""
     normalized_df = normalize_data(data)
     matrix = normalized_df.as_matrix()
@@ -126,15 +126,15 @@ def optimal_k(data):
     for n_clusters in range(2, 30):
         clusters = k_means(data, n_clusters, type_kmeans)
         silhouette_avg = silhouette_score(matrix, clusters)
-        y.append(silhouette_avg)
+        k_scores.append(silhouette_avg)
         print("For n_clusters =", n_clusters, "The average silhouette_score is :", silhouette_avg)
 
     #Plot the average Silhoutte score for each num
-    plt.figure(figsize=(12, 8))
-    plt.plot(range(2, 30), k_scores)
-    plt.xlabel('No of Clusters')
-    plt.ylabel('Silhouette_avg')
-    plt.title('Silhoutte Score for different clusters')
+    #plt.figure(figsize=(12, 8))
+    #plt.plot(range(2, 30), k_scores)
+    #plt.xlabel('No of Clusters')
+    #plt.ylabel('Silhouette_avg')
+    #plt.title('Silhoutte Score for different clusters')
 
     return k_scores
 
@@ -155,9 +155,11 @@ def main():
         procesed_churn_data = preprocessing_churn_data(data)
         procesed_churn_data_df = pd.DataFrame(procesed_churn_data)
         clusters = k_means(procesed_churn_data_df, 2, type_kmeans)
+        optimal_k(procesed_churn_data_df, 2, type_kmeans)
     else:
         #wine.csv dataset
         clusters = k_means(data, k, type_kmeans)
+        optimal_k(data, k, type_kmeans)
 
     #k_scores = optimal_k(data)
     """
